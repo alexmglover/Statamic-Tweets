@@ -19,13 +19,12 @@ class Plugin_tweets extends Plugin {
 	 */
 	public function display()
 	{
-		$username = $this->fetch_param('username');
-		$count = ($this->fetch_param('count')) ? $this->fetch_param('count') : 3;
-		$include_retweets = ($this->fetch_param('include_retweets')) ? $this->fetch_param('include_retweets') : true;
-		$exclude_replies = ($this->fetch_param('exclude_replies')) ? $this->fetch_param('exclude_replies') : false;
-		$include_entities = ($this->fetch_param('include_entities')) ? $this->fetch_param('include_entities') : true;
-
-		$date_format = ($this->fetch_param('date_format')) ? $this->fetch_param('date_format') : 'F d, Y';
+		$username         = $this->fetch_param('username');
+		$count            = $this->fetch_param('count', 3, 'is_numeric'); # defaults to 3, validates as numeric
+		$include_retweets = $this->fetch_param('include_retweets', true, false, true); # defaults to true, always returns boolean
+		$exclude_replies  = $this->fetch_param('exclude_replies', false, false, true); #defaults to false, always returns boolean
+		$include_entities = $this->fetch_param('include_entities', true, false, true); # defaults to true, always returns boolean
+		$date_format      = $this->fetch_param('date_format', 'F d, Y'); # defaults to 'F d, Y'
 
 		// get the tagdata
 		$content = $this->content;
@@ -43,10 +42,10 @@ class Plugin_tweets extends Plugin {
 		$uri = "https://api.twitter.com/1/statuses/user_timeline.json";
 
 		$config = array(
-			'screen_name' => $username,
-			'count' => $count,
-			'include_rts' => $include_retweets,
-			'exclude_replies' => $exclude_replies,
+			'screen_name'      => $username,
+			'count'            => $count,
+			'include_rts'      => $include_retweets,
+			'exclude_replies'  => $exclude_replies,
 			'include_entities' => $include_entities,
 		);
 

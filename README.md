@@ -17,6 +17,7 @@ Here is an example:
 ## Parameters
 
 - username
+- count
 - exclude_replies
 - include_retweets
 - include_entities

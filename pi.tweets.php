@@ -24,7 +24,6 @@ class Plugin_tweets extends Plugin {
 		$include_retweets = $this->fetch_param('include_retweets', true, false, true); # defaults to true, always returns boolean
 		$exclude_replies  = $this->fetch_param('exclude_replies', false, false, true); #defaults to false, always returns boolean
 		$include_entities = $this->fetch_param('include_entities', true, false, true); # defaults to true, always returns boolean
-		$date_format      = $this->fetch_param('date_format', 'F d, Y'); # defaults to 'F d, Y'
 
 		// get the tagdata
 		$content = $this->content;
@@ -60,12 +59,6 @@ class Plugin_tweets extends Plugin {
 		foreach($tweets as $index => $tweet)
 		{
 			$tweets[$index]['time_ago'] = $this->time_ago($tweet['created_at']);
-
-			if($this->fetch_param('date_format'))
-			{
-				$tweets[$index]['created_at'] = date($date_format, strtotime($tweet['created_at'])); 				
-			}
-			
 			$tweets[$index]['text'] = $this->convert_links($tweet['text']);
 
 			//$content = $this->parse_loop($content, $tweet['user']);

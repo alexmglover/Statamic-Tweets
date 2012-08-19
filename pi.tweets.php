@@ -9,6 +9,12 @@ class Plugin_tweets extends Plugin {
 		'author_url' => 'http://alex-glover.com'
 	);
 
+	public $username;
+	public $count;
+	public $include_retweets;
+	public $exclude_replies;
+	public $include_entities;
+
 	/**
 	 * Displays the tweets
 	 * 
@@ -19,41 +25,52 @@ class Plugin_tweets extends Plugin {
 	 */
 	public function display()
 	{
-		$username         = $this->fetch_param('username');
-		$count            = $this->fetch_param('count', 3, 'is_numeric'); # defaults to 3, validates as numeric
-		$include_retweets = $this->fetch_param('include_retweets', true, false, true); # defaults to true, always returns boolean
-		$exclude_replies  = $this->fetch_param('exclude_replies', false, false, true); #defaults to false, always returns boolean
-		$include_entities = $this->fetch_param('include_entities', true, false, true); # defaults to true, always returns boolean
+		$this->username   		= $this->fetch_param('username');
+		$this->count      		= $this->fetch_param('count', 3, 'is_numeric'); # defaults to 3, validates as numeric
+		$this->include_retweets = $this->fetch_param('include_retweets', true, false, true); # defaults to true, always returns boolean
+		$this->exclude_replies  = $this->fetch_param('exclude_replies', false, false, true); #defaults to false, always returns boolean
+		$this->include_entities = $this->fetch_param('include_entities', true, false, true); # defaults to true, always returns boolean
+		$cache 			  		= $this->fetch_param('cache', false, false, true); # defaults to false
+		$cache_expire			= $this->fetch_param('cache_expire', 10, 'is_numeric');
 
 		// get the tagdata
 		$content = $this->content;
 
 		// if username is empty, bail out
-		if(!$username)
+		if(!$this->username)
 		{
 			// @todo better bailing out
 			return false;
 		}
 
-		// create twitter REST API url
-		// @link https://dev.twitter.com/docs/api/1/get/statuses/user_timeline
+		if($cache)
+		{
+			// check for the cache
+			if(file_exists('_cache/twitter_cache'))
+			{
+				// if cache is expired
+				$cache_expire_time = filemtime('_cache/twitter_cache') + ((int) $cache_expire * 60);
 
-		$uri = "https://api.twitter.com/1/statuses/user_timeline.json";
+				if(time() > $cache_expire_time)
+				{
+					$tweets = $this->get_tweets();
+				}
+				else
+				{
+					// get the tweets from the file
+					$tweets = json_decode(file_get_contents('_cache/twitter_cache'), true);
+				}
+			}
+			else
+			{
+				$this->get_tweets();
+			}
 
-		$config = array(
-			'screen_name'      => $username,
-			'count'            => $count,
-			'include_rts'      => $include_retweets,
-			'exclude_replies'  => $exclude_replies,
-			'include_entities' => $include_entities,
-		);
-
-		// create the request uri for twitter
-		$request_uri = $uri . '?' . http_build_query($config);
-
-		$twitter_json = file_get_contents($request_uri);
-
-		$tweets = json_decode($twitter_json, true);
+		}
+		else
+		{
+			$tweets = $this->get_tweets();
+		}
 
 		// is this hacky?  I am just reformatting some of the data
 		foreach($tweets as $index => $tweet)
@@ -65,6 +82,33 @@ class Plugin_tweets extends Plugin {
 		}
 
 		return $this->parse_loop($content, $tweets);
+	}
+
+	private function get_tweets()
+	{
+		// create twitter REST API url
+		// @link https://dev.twitter.com/docs/api/1/get/statuses/user_timeline
+
+		$uri = "https://api.twitter.com/1/statuses/user_timeline.json";
+
+		$config = array(
+			'screen_name'      => $this->username,
+			'count'            => $this->count,
+			'include_rts'      => $this->include_retweets,
+			'exclude_replies'  => $this->exclude_replies,
+			'include_entities' => $this->include_entities,
+		);
+
+		// create the request uri for twitter
+		$request_uri = $uri . '?' . http_build_query($config);
+
+		$twitter_json = file_get_contents($request_uri);
+
+		$tweets = json_decode($twitter_json, true);
+
+		file_put_contents('_cache/twitter_cache', $twitter_json);
+
+		return $tweets;
 	}
 
 	/**

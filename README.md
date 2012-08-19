@@ -4,7 +4,7 @@ Here is an example:
 
 	<h2>Tweets</h2>
 	<ul>
-		{{ tweets:display username="{{ twitter_name }}" exclude_replies="false"}}
+		{{ tweets:display username="{{ twitter_name }}" exclude_replies="false" cache="yes" cache_expire="10" }}
 
 			<li>
 				{{ text }}<br />
@@ -21,6 +21,8 @@ Here is an example:
 - exclude_replies
 - include_retweets
 - include_entities
+- cache
+- cache_expire
 
 ## Installation
 
